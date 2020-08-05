@@ -23,7 +23,7 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
 
     override fun get(): Single<Data<TKey, TValue>> = when {
         data.isSuccess() ||
-        updateDisposable != null -> nextValue()
+                updateDisposable != null -> nextValue()
         else -> update()
     }
 
@@ -46,7 +46,9 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
         return nextValue()
     }
 
-    private fun nextValue(): Single<Data<TKey, TValue>> = subject.filter { it.isSuccess() || it.isFailed() }.firstOrError()
+    private fun nextValue(): Single<Data<TKey, TValue>> = subject.filter { it.isSuccess() || it.isFailed() }
+        .flatMap { if (it.isFailed()) Observable.error(it.error) else Observable.just(it) }
+        .firstOrError()
 
     fun invalidateDelayed(delay: Long) {
         invalidateDisposable?.dispose()

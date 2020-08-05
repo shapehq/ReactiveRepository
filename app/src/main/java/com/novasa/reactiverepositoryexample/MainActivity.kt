@@ -31,17 +31,13 @@ class MainActivity : AppCompatActivity() {
             print("GET")
 
             disposables += repo.get()
-                .subscribe { v ->
-                    print("get", v)
-                }
+                .subscribe({ print("get", it) }, { print("get", it) })
         }
 
         update.setOnClickListener {
             print("UPDATE")
             disposables += repo.update()
-                .subscribe { v ->
-                    print("update", v)
-                }
+                .subscribe({ print("update", it) }, { print("update", it) })
         }
 
         current.setOnClickListener {
@@ -57,6 +53,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun print(source: String, data: Repository.Data<String, Item>) {
         val text = "$source: $data, age: ${data.age}"
+        print(text)
+    }
+
+    private fun print(source: String, error: Throwable) {
+        val text = "$source failed: $error"
         print(text)
     }
 
