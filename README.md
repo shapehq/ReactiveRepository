@@ -1,2 +1,2 @@
 # ReactiveRepository
-Data repository implemented with RxJava2
+Android data repository implemented with RxJava2.
