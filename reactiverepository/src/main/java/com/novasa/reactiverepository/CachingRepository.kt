@@ -22,8 +22,9 @@ abstract class CachingRepository<TKey, TData>(final override val key: TKey) : Re
     override fun observe(): Observable<Data<TKey, TData>> = subject
 
     override fun get(): Single<Data<TKey, TData>> = when {
-        !value.isSuccess() -> update()
-        else -> nextValue()
+        value.isSuccess() ||
+        updateDisposable != null -> nextValue()
+        else -> update()
     }
 
     override fun update(): Single<Data<TKey, TData>> {
@@ -65,7 +66,7 @@ abstract class CachingRepository<TKey, TData>(final override val key: TKey) : Re
         invalidateDisposable?.dispose()
         invalidateDisposable = null
 
-        if (value.status != Repository.Status.EMPTY) {
+        if (value.state != Repository.State.EMPTY) {
             subject.onNext(Data.empty(key))
         }
     }
