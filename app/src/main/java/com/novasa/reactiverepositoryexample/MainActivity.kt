@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         current.setOnClickListener {
             print("CURRENT")
-            print("current", repo.value)
+            print("current", repo.data)
         }
 
         clear.setOnClickListener {
@@ -55,13 +55,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    fun print(source: String, data: Repository.Data<String, Item>) {
+    private fun print(source: String, data: Repository.Data<String, Item>) {
         val text = "$source: $data, age: ${data.age}"
         print(text)
     }
 
-    fun print(text: String) {
+    @SuppressLint("SetTextI18n")
+    private fun print(text: String) {
 
         Log.d("Repo", text)
 

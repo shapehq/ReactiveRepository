@@ -8,26 +8,26 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
-abstract class CachingRepository<TKey, TData>(final override val key: TKey) : Repository<TKey, TData> {
+abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : Repository<TKey, TValue> {
 
-    final override val value: Data<TKey, TData>
+    final override val data: Data<TKey, TValue>
         get() = subject.value!! // This is never null
 
-    private val subject = BehaviorSubject.createDefault<Data<TKey, TData>>(Data.empty(key))
+    private val subject = BehaviorSubject.createDefault<Data<TKey, TValue>>(Data.empty(key))
     private var updateDisposable: Disposable? = null
 
     var invalidationDelay = 0L
     private var invalidateDisposable: Disposable? = null
 
-    override fun observe(): Observable<Data<TKey, TData>> = subject
+    override fun observe(): Observable<Data<TKey, TValue>> = subject
 
-    override fun get(): Single<Data<TKey, TData>> = when {
-        value.isSuccess() ||
+    override fun get(): Single<Data<TKey, TValue>> = when {
+        data.isSuccess() ||
         updateDisposable != null -> nextValue()
         else -> update()
     }
 
-    override fun update(): Single<Data<TKey, TData>> {
+    override fun update(): Single<Data<TKey, TValue>> {
         if (disposed) {
             throw IllegalStateException("Tried to update disposed repository")
         }
@@ -46,7 +46,7 @@ abstract class CachingRepository<TKey, TData>(final override val key: TKey) : Re
         return nextValue()
     }
 
-    private fun nextValue(): Single<Data<TKey, TData>> = subject.filter { it.isSuccess() || it.isFailed() }.firstOrError()
+    private fun nextValue(): Single<Data<TKey, TValue>> = subject.filter { it.isSuccess() || it.isFailed() }.firstOrError()
 
     fun invalidateDelayed(delay: Long) {
         invalidateDisposable?.dispose()
@@ -66,16 +66,16 @@ abstract class CachingRepository<TKey, TData>(final override val key: TKey) : Re
         invalidateDisposable?.dispose()
         invalidateDisposable = null
 
-        if (value.state != Repository.State.EMPTY) {
+        if (data.state != Repository.State.EMPTY) {
             subject.onNext(Data.empty(key))
         }
     }
 
-    override fun set(data: TData) {
-        subject.onNext(Data.success(key, data))
+    override fun set(value: TValue) {
+        subject.onNext(Data.success(key, value))
     }
 
-    protected abstract fun refresh(): Single<TData>
+    protected abstract fun refresh(): Single<TValue>
 
     private var disposed = false
 
