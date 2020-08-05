@@ -9,6 +9,10 @@ class ItemRepository : CachingRepository<String, Item>("Data") {
 
     private var id: Int = 0
 
+    init {
+        invalidationDelay = 1000
+    }
+
     override fun refresh(): Single<Item> {
         return Single.timer(2, TimeUnit.SECONDS)
             .map { Item(++id) }

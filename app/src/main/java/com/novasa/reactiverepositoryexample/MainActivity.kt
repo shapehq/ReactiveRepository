@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.novasa.reactiverepository.Repository
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.activity_main.*
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         repo = ItemRepository()
 
         disposables += repo.observe()
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe { print("observe", it) }
 
         get.setOnClickListener {
