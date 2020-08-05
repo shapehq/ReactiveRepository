@@ -1,6 +1,34 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+def vCode = 1
+def vName = '0.1'
+
+ext {
+    bintrayRepo = 'Novasa'
+    bintrayName = 'com.novasa.reactiverepository'
+
+    libraryName = 'reactiverepository'
+
+    publishedGroupId = 'com.novasa'
+    artifact = 'reactiverepository'
+    libraryVersion = vName
+    libraryDescription = 'Android data repository implemented with RxJava2.'
+
+    siteUrl = 'https://github.com/Novasa/ReactiveRepository'
+    gitUrl = 'https://github.com/Novasa/ReactiveRepository.git'
+
+    developerId = 'mhswtf'
+    developerName = 'Mikkel Schläger'
+    developerEmail = 'mikkel@novasa.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
 
 android {
     compileSdkVersion 29
@@ -9,8 +37,8 @@ android {
         applicationId "com.novasa.reactiverepositoryexample"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode vCode
+        versionName vName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
