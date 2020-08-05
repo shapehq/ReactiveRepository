@@ -10,7 +10,7 @@ class ItemRepository : CachingRepository<String, Item>("Data") {
     private var id: Int = 0
 
     init {
-        invalidationDelay = 1000
+        invalidationDelay = 10 * 1000
     }
 
     override fun refresh(): Single<Item> {

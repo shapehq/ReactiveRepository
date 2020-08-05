@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     fun print(source: String, data: Repository.Data<String, Item>) {
-        val text = "$source: $data"
+        val text = "$source: $data, age: ${data.age}"
         print(text)
     }
 
