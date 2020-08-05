@@ -48,7 +48,7 @@ interface Repository<TKey, TValue> : Disposable {
     data class Data<TKey, TValue>(
         val key: TKey,
         val state: State,
-        val data: TValue? = null,
+        val value: TValue? = null,
         val error: Throwable? = null,
         val timestamp: Long = SystemClock.elapsedRealtime()
     ) {
@@ -56,7 +56,7 @@ interface Repository<TKey, TValue> : Disposable {
         internal companion object {
             fun <TKey, TValue> empty(key: TKey): Data<TKey, TValue> = Data(key, State.EMPTY)
             fun <TKey, TValue> loading(key: TKey): Data<TKey, TValue> = Data(key, State.LOADING)
-            fun <TKey, TValue> success(key: TKey, data: TValue): Data<TKey, TValue> = Data(key, State.SUCCESS, data = data)
+            fun <TKey, TValue> success(key: TKey, value: TValue): Data<TKey, TValue> = Data(key, State.SUCCESS, value = value)
             fun <TKey, TValue> failure(key: TKey, error: Throwable): Data<TKey, TValue> = Data(key, State.FAILED, error = error)
         }
 
