@@ -1,0 +1,3 @@
+include ':reactiverepository'
+include ':app'
+rootProject.name = "ReactiveRepository"
