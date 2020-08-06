@@ -83,6 +83,12 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
         }
     }
 
+    override fun push() {
+        if (!isDisposed) {
+            subject.onNext(data)
+        }
+    }
+
     override fun clear(): Completable = Completable.fromAction {
         disposables.clear()
         if (data.state != Repository.State.EMPTY) {

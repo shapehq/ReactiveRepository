@@ -48,6 +48,11 @@ class MainActivity : AppCompatActivity() {
             print("current", repo.data)
         }
 
+        push.setOnClickListener {
+            print("PUSH")
+            repo.push()
+        }
+
         clear.setOnClickListener {
             print("CLEAR")
             disposables += repo.clear().subscribe()
