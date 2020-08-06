@@ -1,6 +1,7 @@
 package com.novasa.reactiverepository
 
 import android.os.SystemClock
+import androidx.annotation.CheckResult
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -18,21 +19,25 @@ interface Repository<TKey, TValue> : Disposable {
      * Observe this repository.
      * This should receive all updates to its internal state, including [State.LOADING] and [State.EMPTY].
      */
+    @CheckResult
     fun observe(): Observable<Data<TKey, TValue>>
 
     /**
      * Get the data. This should only update if the repository state is currently empty or failed.
      * It should only publish [State.SUCCESS] and [State.FAILED] states.
      */
+    @CheckResult
     fun get(): Single<Data<TKey, TValue>>
 
     /**
      * Update the data. This should always start a new update.
      * It should only publish [State.SUCCESS] and [State.FAILED] states.
      */
+    @CheckResult
     fun update(): Single<Data<TKey, TValue>>
 
     /** Clear any cached data or in progress updates. */
+    @CheckResult
     fun clear(): Completable
 
     /** Replace the current data in the repository. */
