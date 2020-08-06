@@ -4,6 +4,7 @@ import com.novasa.reactiverepository.Repository.Data
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
@@ -19,36 +20,56 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
     var invalidationDelay = 0L
     private var invalidateDisposable: Disposable? = null
 
+    private val disposables = CompositeDisposable()
+
     override fun observe(): Observable<Data<TKey, TValue>> = subject
 
     override fun get(): Single<Data<TKey, TValue>> = when {
-        data.isSuccess() ||
-                updateDisposable != null -> nextValue()
+        data.isSuccess() || updateDisposable != null -> nextValue()
         else -> update()
     }
 
     override fun update(): Single<Data<TKey, TValue>> {
-        if (disposed) {
+        if (isDisposed) {
             throw IllegalStateException("Tried to update disposed repository")
         }
 
         updateDisposable?.dispose()
-
-        updateDisposable = refresh()
-            .map { Data.success(key, it) }
-            .onErrorReturn { Data.failure(key, it) }
-            .doOnSubscribe { subject.onNext(Data.loading(key)) }
-            .doOnSuccess { subject.onNext(it) }
-            .doOnSuccess { invalidateDelayed(invalidationDelay) }
+        updateDisposable = refreshInternal()
             .doFinally { updateDisposable = null }
             .subscribe()
 
         return nextValue()
     }
 
+    override fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TKey, TValue>> {
+        if (isDisposed) {
+            throw IllegalStateException("Tried to update disposed repository")
+        }
+
+        return Observable.interval(initialDelay, period, TimeUnit.MILLISECONDS)
+            .flatMapSingle { refreshInternal() }
+            .doOnSubscribe { d -> disposables.add(d) }
+    }
+
+    private fun refreshInternal(): Single<Data<TKey, TValue>> = refresh()
+        .map { Data.success(key, it) }
+        .onErrorReturn { Data.failure(key, it) }
+        .doOnSubscribe { d -> disposables.add(d) }
+        .doOnSubscribe { subject.onNext(Data.loading(key)) }
+        .doOnSuccess { subject.onNext(it) }
+        .doOnSuccess { invalidateDelayed(invalidationDelay) }
+        .doOnDispose { if (data.state == Repository.State.LOADING) emitEmpty() }
+
     private fun nextValue(): Single<Data<TKey, TValue>> = subject.filter { it.isSuccess() || it.isFailed() }
         .flatMap { if (it.isFailed()) Observable.error(it.error) else Observable.just(it) }
         .firstOrError()
+
+    private fun emitEmpty() {
+        if (!isDisposed) {
+            subject.onNext(Data.empty(key))
+        }
+    }
 
     fun invalidateDelayed(delay: Long) {
         invalidateDisposable?.dispose()
@@ -57,19 +78,15 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
         if (delay > 0) {
             invalidateDisposable = Completable.timer(delay, TimeUnit.MILLISECONDS)
                 .andThen(clear())
+                .doOnSubscribe { d -> disposables.add(d) }
                 .subscribe()
         }
     }
 
     override fun clear(): Completable = Completable.fromAction {
-        updateDisposable?.dispose()
-        updateDisposable = null
-
-        invalidateDisposable?.dispose()
-        invalidateDisposable = null
-
+        disposables.clear()
         if (data.state != Repository.State.EMPTY) {
-            subject.onNext(Data.empty(key))
+            emitEmpty()
         }
     }
 
@@ -79,18 +96,10 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
 
     protected abstract fun refresh(): Single<TValue>
 
-    private var disposed = false
-
-    override fun isDisposed(): Boolean = disposed
+    override fun isDisposed(): Boolean = disposables.isDisposed
 
     override fun dispose() {
-        updateDisposable?.dispose()
-        updateDisposable = null
-
-        invalidateDisposable?.dispose()
-        invalidateDisposable = null
-
         subject.onComplete()
-        disposed = true
+        disposables.dispose()
     }
 }

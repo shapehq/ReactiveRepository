@@ -39,27 +39,39 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="get" />
+            android:text="get"
+            android:textSize="12dp" />
 
         <Button
             android:id="@+id/update"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="update" />
+            android:text="update"
+            android:textSize="12dp" />
 
         <Button
             android:id="@+id/current"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="current" />
+            android:text="current"
+            android:textSize="12dp" />
 
         <Button
             android:id="@+id/clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="clear" />
+            android:text="clear"
+            android:textSize="12dp" />
+
+        <Button
+            android:id="@+id/periodic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="periodic"
+            android:textSize="12dp" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

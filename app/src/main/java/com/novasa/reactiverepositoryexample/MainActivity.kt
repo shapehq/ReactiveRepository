@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.novasa.reactiverepository.Repository
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -16,6 +17,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repo: Repository<String, Item>
 
     private val disposables = CompositeDisposable()
+
+    private var periodicDisposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +51,21 @@ class MainActivity : AppCompatActivity() {
         clear.setOnClickListener {
             print("CLEAR")
             disposables += repo.clear().subscribe()
+        }
+
+        periodic.setOnClickListener {
+            print("PERIODIC")
+
+            periodicDisposable?.let {
+                it.dispose()
+                periodicDisposable = null
+            } ?: run {
+                disposables += repo.periodicUpdates(5000, 2000)
+                    .doOnSubscribe { d -> periodicDisposable = d }
+                    .doFinally { periodicDisposable = null }
+                    .retry()
+                    .subscribe({ print("periodic", it) }, { print("periodic", it) })
+            }
         }
     }
 

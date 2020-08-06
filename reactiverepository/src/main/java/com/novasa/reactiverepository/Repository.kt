@@ -36,6 +36,12 @@ interface Repository<TKey, TValue> : Disposable {
     @CheckResult
     fun update(): Single<Data<TKey, TValue>>
 
+    /**
+     * Start periodic [update].
+     */
+    @CheckResult
+    fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TKey, TValue>>
+
     /** Clear any cached data or in progress updates. */
     @CheckResult
     fun clear(): Completable
