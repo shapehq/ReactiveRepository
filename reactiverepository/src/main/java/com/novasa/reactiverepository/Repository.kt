@@ -7,7 +7,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 
-interface Repository<TKey, TValue> : Disposable {
+interface Repository<TKey, TValue : Any> : Disposable {
 
     /** A unique identifier. */
     val key: TKey

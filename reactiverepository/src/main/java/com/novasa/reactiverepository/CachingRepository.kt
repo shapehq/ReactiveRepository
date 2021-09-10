@@ -1,15 +1,13 @@
 package com.novasa.reactiverepository
 
 import com.novasa.reactiverepository.Repository.Data
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import io.reactivex.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
-abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : Repository<TKey, TValue> {
+abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKey) : Repository<TKey, TValue> {
 
     final override val data: Data<TKey, TValue>
         get() = subject.value!! // This is never null
@@ -54,6 +52,7 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
 
     private fun refreshInternal(): Single<Data<TKey, TValue>> = refresh()
         .map { Data.success(key, it) }
+        .switchIfEmpty(Single.fromCallable { Data.empty(key) })
         .onErrorReturn { Data.failure(key, it) }
         .doOnSubscribe { d -> disposables.add(d) }
         .doOnSubscribe { subject.onNext(Data.loading(key)) }
@@ -100,7 +99,7 @@ abstract class CachingRepository<TKey, TValue>(final override val key: TKey) : R
         subject.onNext(Data.success(key, value))
     }
 
-    protected abstract fun refresh(): Single<TValue>
+    protected abstract fun refresh(): Maybe<TValue>
 
     override fun isDisposed(): Boolean = disposables.isDisposed
 

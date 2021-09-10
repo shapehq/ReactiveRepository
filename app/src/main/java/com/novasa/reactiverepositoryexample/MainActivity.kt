@@ -6,11 +6,11 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.novasa.reactiverepository.Repository
+import com.novasa.reactiverepositoryexample.databinding.ActivityMainBinding
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.plusAssign
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,9 +20,14 @@ class MainActivity : AppCompatActivity() {
 
     private var periodicDisposable: Disposable? = null
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+
+        setContentView(binding.root)
 
         repo = ItemRepository()
 
@@ -30,46 +35,48 @@ class MainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { print("observe", it) }
 
-        get.setOnClickListener {
-            print("GET")
+        binding.apply {
+            get.setOnClickListener {
+                print("GET")
 
-            disposables += repo.get()
-                .subscribe({ print("get", it) }, { print("get", it) })
-        }
+                disposables += repo.get()
+                    .subscribe({ print("get", it) }, { print("get", it) })
+            }
 
-        update.setOnClickListener {
-            print("UPDATE")
-            disposables += repo.update()
-                .subscribe({ print("update", it) }, { print("update", it) })
-        }
+            update.setOnClickListener {
+                print("UPDATE")
+                disposables += repo.update()
+                    .subscribe({ print("update", it) }, { print("update", it) })
+            }
 
-        current.setOnClickListener {
-            print("CURRENT")
-            print("current", repo.data)
-        }
+            current.setOnClickListener {
+                print("CURRENT")
+                print("current", repo.data)
+            }
 
-        push.setOnClickListener {
-            print("PUSH")
-            repo.push()
-        }
+            push.setOnClickListener {
+                print("PUSH")
+                repo.push()
+            }
 
-        clear.setOnClickListener {
-            print("CLEAR")
-            disposables += repo.clear().subscribe()
-        }
+            clear.setOnClickListener {
+                print("CLEAR")
+                disposables += repo.clear().subscribe()
+            }
 
-        periodic.setOnClickListener {
-            print("PERIODIC")
+            periodic.setOnClickListener {
+                print("PERIODIC")
 
-            periodicDisposable?.let {
-                it.dispose()
-                periodicDisposable = null
-            } ?: run {
-                disposables += repo.periodicUpdates(5000, 2000)
-                    .doOnSubscribe { d -> periodicDisposable = d }
-                    .doFinally { periodicDisposable = null }
-                    .retry()
-                    .subscribe({ print("periodic", it) }, { print("periodic", it) })
+                periodicDisposable?.let {
+                    it.dispose()
+                    periodicDisposable = null
+                } ?: run {
+                    disposables += repo.periodicUpdates(5000, 2000)
+                        .doOnSubscribe { d -> periodicDisposable = d }
+                        .doFinally { periodicDisposable = null }
+                        .retry()
+                        .subscribe({ print("periodic", it) }, { print("periodic", it) })
+                }
             }
         }
     }
@@ -89,15 +96,17 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("Repo", text)
 
-        if (log.text.isEmpty()) {
-            log.text = text
+        binding.apply {
+            if (log.text.isEmpty()) {
+                log.text = text
 
-        } else {
-            log.text = "${log.text}\n$text"
-        }
+            } else {
+                log.text = "${log.text}\n$text"
+            }
 
-        scrollView.post {
-            scrollView.fullScroll(View.FOCUS_DOWN)
+            scrollView.post {
+                scrollView.fullScroll(View.FOCUS_DOWN)
+            }
         }
     }
 }
