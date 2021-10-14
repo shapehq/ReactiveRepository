@@ -4,17 +4,12 @@ plugins {
     id 'maven-publish'
 }
 
-def vCode = 8
-def vName = '0.1.9'
-
 android {
     compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode vCode
-        versionName vName
     }
 
     buildTypes {
