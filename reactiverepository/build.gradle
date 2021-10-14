@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 def vCode = 8
-def vName = '0.1.7'
+def vName = '0.1.9'
 
 android {
     compileSdkVersion 30
