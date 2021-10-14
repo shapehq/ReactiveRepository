@@ -1,6 +1,7 @@
 package com.novasa.reactiverepository
 
 import android.os.SystemClock
+import android.widget.TextView
 import androidx.annotation.CheckResult
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -59,26 +60,34 @@ interface Repository<TValue : Any> : Disposable {
         FAILED
     }
 
+    enum class Source {
+        UNDEFINED,
+        REMOTE,
+        PERSISTENCE
+    }
+
     data class Data<TValue>(
         val id: String,
         val state: State,
         val value: TValue? = null,
         val error: Throwable? = null,
-        val timestamp: Long = SystemClock.elapsedRealtime()
+        val source: Source = Source.UNDEFINED,
+        val timestamp: Long = System.currentTimeMillis()
     ) {
 
         internal companion object {
             fun <TValue> empty(id: String): Data<TValue> = Data(id, State.EMPTY)
             fun <TValue> loading(id: String): Data<TValue> = Data(id, State.LOADING)
-            fun <TValue> success(id: String, value: TValue): Data<TValue> = Data(id, State.SUCCESS, value = value)
+            fun <TValue> success(id: String, value: TValue, source: Source, timestamp: Long): Data<TValue> = Data(id, State.SUCCESS, value = value, source = source, timestamp = timestamp)
             fun <TValue> failure(id: String, error: Throwable): Data<TValue> = Data(id, State.FAILED, error = error)
         }
 
-        /** The age of this data in milliseconds, as measured by [SystemClock.elapsedRealtime]. */
+        /** The age of this data in milliseconds, as measured by [System.currentTimeMillis]. */
         val age: Long
-            get() = SystemClock.elapsedRealtime() - timestamp
+            get() = System.currentTimeMillis() - timestamp
 
         fun isSuccess() = state == State.SUCCESS
         fun isFailed() = state == State.FAILED
+        fun isEmpty() = state == State.EMPTY
     }
 }

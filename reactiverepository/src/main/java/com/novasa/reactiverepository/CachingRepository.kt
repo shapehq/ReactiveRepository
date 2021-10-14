@@ -9,6 +9,12 @@ import java.util.concurrent.TimeUnit
 
 abstract class CachingRepository<TValue : Any>(final override val id: String) : Repository<TValue> {
 
+    data class Result<TValue>(
+        val value: TValue,
+        val source: Repository.Source = Repository.Source.UNDEFINED,
+        val timestamp: Long = System.currentTimeMillis()
+    )
+
     final override val data: Data<TValue>
         get() = subject.value!! // This is never null
 
@@ -51,7 +57,7 @@ abstract class CachingRepository<TValue : Any>(final override val id: String) : 
     }
 
     private fun refreshInternal(): Single<Data<TValue>> = refresh()
-        .map { Data.success(id, it) }
+        .map { Data.success(id, it.value, it.source, it.timestamp) }
         .switchIfEmpty(Single.fromCallable { Data.empty(id) })
         .onErrorReturn { Data.failure(id, it) }
         .doOnSubscribe { d -> disposables.add(d) }
@@ -96,10 +102,10 @@ abstract class CachingRepository<TValue : Any>(final override val id: String) : 
     }
 
     override fun set(value: TValue) {
-        subject.onNext(Data.success(id, value))
+        subject.onNext(Data.success(id, value, Repository.Source.UNDEFINED, System.currentTimeMillis()))
     }
 
-    protected abstract fun refresh(): Maybe<TValue>
+    protected abstract fun refresh(): Maybe<Result<TValue>>
 
     override fun isDisposed(): Boolean = disposables.isDisposed
 

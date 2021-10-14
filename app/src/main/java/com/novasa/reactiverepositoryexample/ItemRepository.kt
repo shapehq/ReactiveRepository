@@ -1,6 +1,7 @@
 package com.novasa.reactiverepositoryexample
 
 import com.novasa.reactiverepository.CachingRepository
+import com.novasa.reactiverepository.Repository
 import io.reactivex.Maybe
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -15,10 +16,11 @@ class ItemRepository : CachingRepository<Item>("Data") {
         invalidationDelay = 10 * 1000L
     }
 
-    override fun refresh(): Maybe<Item> {
+    override fun refresh(): Maybe<Result<Item>> {
         return Maybe.timer(2, TimeUnit.SECONDS)
             .map { Item(++itemId) }
             .flatMap { if (it.id % 5 == 0) Maybe.error(RuntimeException("Failed repository refresh")) else Maybe.just(it) }
+            .map { Result(it, Repository.Source.REMOTE) }
             .observeOn(AndroidSchedulers.mainThread())
     }
 }
