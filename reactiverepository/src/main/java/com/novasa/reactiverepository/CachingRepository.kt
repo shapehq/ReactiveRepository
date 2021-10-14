@@ -7,12 +7,12 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
-abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKey) : Repository<TKey, TValue> {
+abstract class CachingRepository<TValue : Any>(final override val id: String) : Repository<TValue> {
 
-    final override val data: Data<TKey, TValue>
+    final override val data: Data<TValue>
         get() = subject.value!! // This is never null
 
-    private val subject = BehaviorSubject.createDefault<Data<TKey, TValue>>(Data.empty(key))
+    private val subject = BehaviorSubject.createDefault<Data<TValue>>(Data.empty(id))
     private var updateDisposable: Disposable? = null
 
     var invalidationDelay = 0L
@@ -20,14 +20,14 @@ abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKe
 
     private val disposables = CompositeDisposable()
 
-    override fun observe(): Observable<Data<TKey, TValue>> = subject
+    override fun observe(): Observable<Data<TValue>> = subject
 
-    override fun get(): Single<Data<TKey, TValue>> = when {
+    override fun get(): Single<Data<TValue>> = when {
         data.isSuccess() || updateDisposable != null -> nextValue()
         else -> update()
     }
 
-    override fun update(): Single<Data<TKey, TValue>> {
+    override fun update(): Single<Data<TValue>> {
         if (isDisposed) {
             throw IllegalStateException("Tried to update disposed repository")
         }
@@ -40,7 +40,7 @@ abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKe
         return nextValue()
     }
 
-    override fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TKey, TValue>> {
+    override fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TValue>> {
         if (isDisposed) {
             throw IllegalStateException("Tried to update disposed repository")
         }
@@ -50,23 +50,23 @@ abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKe
             .doOnSubscribe { d -> disposables.add(d) }
     }
 
-    private fun refreshInternal(): Single<Data<TKey, TValue>> = refresh()
-        .map { Data.success(key, it) }
-        .switchIfEmpty(Single.fromCallable { Data.empty(key) })
-        .onErrorReturn { Data.failure(key, it) }
+    private fun refreshInternal(): Single<Data<TValue>> = refresh()
+        .map { Data.success(id, it) }
+        .switchIfEmpty(Single.fromCallable { Data.empty(id) })
+        .onErrorReturn { Data.failure(id, it) }
         .doOnSubscribe { d -> disposables.add(d) }
-        .doOnSubscribe { subject.onNext(Data.loading(key)) }
+        .doOnSubscribe { subject.onNext(Data.loading(id)) }
         .doOnSuccess { subject.onNext(it) }
         .doOnSuccess { invalidateDelayed(invalidationDelay) }
         .doOnDispose { if (data.state == Repository.State.LOADING) emitEmpty() }
 
-    private fun nextValue(): Single<Data<TKey, TValue>> = subject.filter { it.isSuccess() || it.isFailed() }
+    private fun nextValue(): Single<Data<TValue>> = subject.filter { it.isSuccess() || it.isFailed() }
         .flatMap { if (it.isFailed()) Observable.error(it.error) else Observable.just(it) }
         .firstOrError()
 
     private fun emitEmpty() {
         if (!isDisposed) {
-            subject.onNext(Data.empty(key))
+            subject.onNext(Data.empty(id))
         }
     }
 
@@ -96,7 +96,7 @@ abstract class CachingRepository<TKey, TValue : Any>(final override val key: TKe
     }
 
     override fun set(value: TValue) {
-        subject.onNext(Data.success(key, value))
+        subject.onNext(Data.success(id, value))
     }
 
     protected abstract fun refresh(): Maybe<TValue>

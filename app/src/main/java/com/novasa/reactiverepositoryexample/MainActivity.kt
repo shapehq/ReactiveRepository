@@ -14,7 +14,7 @@ import io.reactivex.rxkotlin.plusAssign
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var repo: Repository<String, Item>
+    private lateinit var repo: Repository<Item>
 
     private val disposables = CompositeDisposable()
 
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun print(source: String, data: Repository.Data<String, Item>) {
+    private fun print(source: String, data: Repository.Data<Item>) {
         val text = "$source: $data, age: ${data.age}"
         print(text)
     }

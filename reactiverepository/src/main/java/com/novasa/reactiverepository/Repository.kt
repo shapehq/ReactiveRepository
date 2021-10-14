@@ -7,40 +7,40 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 
-interface Repository<TKey, TValue : Any> : Disposable {
+interface Repository<TValue : Any> : Disposable {
 
-    /** A unique identifier. */
-    val key: TKey
+    /** An identifier which will be supplied to any data output */
+    val id: String
 
     /** The current data in this repository. */
-    val data: Data<TKey, TValue>
+    val data: Data<TValue>
 
     /**
      * Observe this repository.
      * This should receive all updates to its internal state, including [State.LOADING] and [State.EMPTY].
      */
     @CheckResult
-    fun observe(): Observable<Data<TKey, TValue>>
+    fun observe(): Observable<Data<TValue>>
 
     /**
      * Get the data. This should only update if the repository state is currently empty or failed.
      * It should only publish [State.SUCCESS] and [State.FAILED] states.
      */
     @CheckResult
-    fun get(): Single<Data<TKey, TValue>>
+    fun get(): Single<Data<TValue>>
 
     /**
      * Update the data. This should always start a new update.
      * It should only publish [State.SUCCESS] and [State.FAILED] states.
      */
     @CheckResult
-    fun update(): Single<Data<TKey, TValue>>
+    fun update(): Single<Data<TValue>>
 
     /**
      * Start periodic [update].
      */
     @CheckResult
-    fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TKey, TValue>>
+    fun periodicUpdates(period: Long, initialDelay: Long): Observable<Data<TValue>>
 
     /** Push an update with the current value to observers. */
     fun push()
@@ -59,8 +59,8 @@ interface Repository<TKey, TValue : Any> : Disposable {
         FAILED
     }
 
-    data class Data<TKey, TValue>(
-        val key: TKey,
+    data class Data<TValue>(
+        val id: String,
         val state: State,
         val value: TValue? = null,
         val error: Throwable? = null,
@@ -68,10 +68,10 @@ interface Repository<TKey, TValue : Any> : Disposable {
     ) {
 
         internal companion object {
-            fun <TKey, TValue> empty(key: TKey): Data<TKey, TValue> = Data(key, State.EMPTY)
-            fun <TKey, TValue> loading(key: TKey): Data<TKey, TValue> = Data(key, State.LOADING)
-            fun <TKey, TValue> success(key: TKey, value: TValue): Data<TKey, TValue> = Data(key, State.SUCCESS, value = value)
-            fun <TKey, TValue> failure(key: TKey, error: Throwable): Data<TKey, TValue> = Data(key, State.FAILED, error = error)
+            fun <TValue> empty(id: String): Data<TValue> = Data(id, State.EMPTY)
+            fun <TValue> loading(id: String): Data<TValue> = Data(id, State.LOADING)
+            fun <TValue> success(id: String, value: TValue): Data<TValue> = Data(id, State.SUCCESS, value = value)
+            fun <TValue> failure(id: String, error: Throwable): Data<TValue> = Data(id, State.FAILED, error = error)
         }
 
         /** The age of this data in milliseconds, as measured by [SystemClock.elapsedRealtime]. */
