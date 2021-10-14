@@ -89,5 +89,7 @@ interface Repository<TValue : Any> : Disposable {
         fun isSuccess() = state == State.SUCCESS
         fun isFailed() = state == State.FAILED
         fun isEmpty() = state == State.EMPTY
+
+        fun valueOrThrow() : TValue = value ?: throw RepositoryException(error)
     }
 }
